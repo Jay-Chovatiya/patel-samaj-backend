@@ -1,7 +1,6 @@
 package com.patelsamaj.patelsamaj_backend.controller;
 
 import com.patelsamaj.patelsamaj_backend.dto.ItemDTO;
-import com.patelsamaj.patelsamaj_backend.dto.ItemSelectionDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
 import com.patelsamaj.patelsamaj_backend.service.ItemService;
 import jakarta.validation.Valid;

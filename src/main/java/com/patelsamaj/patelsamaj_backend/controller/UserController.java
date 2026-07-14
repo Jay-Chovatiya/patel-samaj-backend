@@ -1,6 +1,7 @@
 package com.patelsamaj.patelsamaj_backend.controller;
 
 import com.patelsamaj.patelsamaj_backend.dto.ChangePasswordDTO;
+import com.patelsamaj.patelsamaj_backend.dto.UserDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserProfileDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
 import com.patelsamaj.patelsamaj_backend.service.UserService;
@@ -8,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -27,6 +30,24 @@ public class UserController {
         int userId = SecurityUtils.getAuthenticatedUserId();
         userService.updateProfile(userId, dto);
         return ResponseEntity.ok("Profile updated successfully.");
+    }
+
+    @GetMapping("all")
+    public ResponseEntity<List<UserDTO>> getAllAdminUser(){
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @PutMapping("/toggle/{userId}")
+    public ResponseEntity<String> toggleAdminActivation(@PathVariable int userId){
+        Boolean result = userService.toggleAdminActivation(userId);
+        return result ? ResponseEntity.ok("Admin Activated") : ResponseEntity.ok("Admin Inactivated");
+    }
+
+    @PostMapping("/inviteAdmin")
+    public ResponseEntity<String> addNewAdminUser(@Valid @RequestBody UserProfileDTO dto){
+        int userId = SecurityUtils.getAuthenticatedUserId();
+        userService.inviteNewUser(dto, userId);
+        return ResponseEntity.ok("Admin invited successfully.");
     }
 
     @PostMapping("/change-password")
