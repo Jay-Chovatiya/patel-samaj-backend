@@ -37,8 +37,8 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toDtoList(eventRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
-    public List<EventDTO> getInProgressEvents(){
-        return eventMapper.toDtoList(eventRepository.findByStatusId(3));
+    public List<EventDTO> getEventsByStatusId(int statusId){
+        return eventMapper.toDtoList(eventRepository.findByStatusId(statusId));
     }
 
     @Override
@@ -58,9 +58,11 @@ public class EventServiceImpl implements EventService {
         else{
             event = new Event();
             event.setIsClosed(false);
+            event.setStatusId(1);
+            event.setCreatedBy(userId);
         }
 
-        eventMapper.updateEventFromDto(dto, event);
+        eventMapper.updateEntityFromDto(dto, event);
 
         BigDecimal grandTotal = BigDecimal.ZERO;
 

@@ -37,6 +37,9 @@ public class User implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "created_by")
+    private Integer CreatedBy;
+
     @Override
     public Collection getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));

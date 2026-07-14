@@ -2,7 +2,6 @@ package com.patelsamaj.patelsamaj_backend.controller;
 
 import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
-import com.patelsamaj.patelsamaj_backend.model.Event;
 import com.patelsamaj.patelsamaj_backend.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +21,19 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllEvent());
     }
 
+    @GetMapping("/pending")
+    public ResponseEntity<List<EventDTO>> getPendingEvent(){
+        return ResponseEntity.ok(eventService.getEventsByStatusId(1));
+    }
+
+    @GetMapping("/approved")
+    public ResponseEntity<List<EventDTO>> getApprovedEvent(){
+        return ResponseEntity.ok(eventService.getEventsByStatusId(2));
+    }
+
     @GetMapping("/in-progress")
-    public ResponseEntity<List<EventDTO>> getAllInProgressEvent(){
-        return ResponseEntity.ok(eventService.getInProgressEvents());
+    public ResponseEntity<List<EventDTO>> getInProgressEvent(){
+        return ResponseEntity.ok(eventService.getEventsByStatusId(3));
     }
 
     @GetMapping("{eventId}")

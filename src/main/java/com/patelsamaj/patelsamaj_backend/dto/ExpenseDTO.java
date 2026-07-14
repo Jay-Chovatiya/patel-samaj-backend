@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class ExpenseDTO {
     private Integer expenseId;
 
-    //@NotBlank(message = "Description cannot be blank")
+    @NotBlank(message = "Description cannot be blank")
     private String description;
 
     @NotNull(message = "Amount is required")

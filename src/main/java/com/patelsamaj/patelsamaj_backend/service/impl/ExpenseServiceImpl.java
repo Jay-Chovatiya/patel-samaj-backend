@@ -47,7 +47,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         }
         expenseMapper.updateEntityFromDto(dto, expense);
         expenseRepository.save(expense);
-        return dto;
+        return expenseMapper.toDto(expense);
     }
 
     @Override
