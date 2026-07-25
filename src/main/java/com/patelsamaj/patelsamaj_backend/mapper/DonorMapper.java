@@ -10,6 +10,5 @@ import org.mapstruct.MappingTarget;
 public interface DonorMapper extends BaseMapper<DonorDTO, Donor> {
 
     @Override
-    @Mapping(target = "donationDate", ignore = true)
     void updateEntityFromDto(DonorDTO dto, @MappingTarget Donor entity);
 }

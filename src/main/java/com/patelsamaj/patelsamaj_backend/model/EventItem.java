@@ -24,6 +24,6 @@ public class EventItem {
 
     private Integer quantity = 1;
 
-    @Column(name = "price_at_booking", nullable = false, precision = 5, scale = 2)
+    @Column(name = "price_at_booking", nullable = false, precision = 7, scale = 2)
     private BigDecimal priceAtBooking;
 }
