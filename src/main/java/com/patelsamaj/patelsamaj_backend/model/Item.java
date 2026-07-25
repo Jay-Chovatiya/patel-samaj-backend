@@ -16,7 +16,7 @@ public class Item {
     @Column(name = "item_name", nullable = false, unique = true)
     private String itemName;
 
-    @Column(name = "current_price", nullable = false, precision = 5, scale = 2)
+    @Column(name = "current_price", nullable = false, precision = 7, scale = 2)
     private BigDecimal currentPrice;
 
     private String description;

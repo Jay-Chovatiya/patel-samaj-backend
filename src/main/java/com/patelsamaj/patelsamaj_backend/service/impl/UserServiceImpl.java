@@ -4,6 +4,7 @@ import com.patelsamaj.patelsamaj_backend.dto.ChangePasswordDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ForgotPasswordDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserProfileDTO;
+import com.patelsamaj.patelsamaj_backend.exception.DuplicateResourceFoundException;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
 import com.patelsamaj.patelsamaj_backend.mapper.UserMapper;
 import com.patelsamaj.patelsamaj_backend.mapper.UserProfileMapper;
@@ -55,6 +56,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public String inviteNewUser(UserProfileDTO dto, int userId){
+        boolean isNotExist = userRepository.findByEmailOrMobileNumber(dto.getEmail(), dto.getMobileNumber()).isEmpty();
+        if(!isNotExist){
+            throw new DuplicateResourceFoundException("User with same mobile number or email present");
+        }
+
         User user = userProfileMapper.toEntity(dto);
         Role adminRole = roleRepository.findById(1)
                         .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
