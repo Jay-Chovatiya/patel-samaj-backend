@@ -31,6 +31,7 @@ public class ItemServiceImpl implements ItemService {
             itemMapper.updateEntityFromDto(dto, item);
         } else {
             item = itemMapper.toEntity(dto);
+            item.setIsDeleted(false);
             item.setCreatedBy(userId);
         }
 
