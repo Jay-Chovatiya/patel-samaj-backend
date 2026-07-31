@@ -35,9 +35,9 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/donors/**", "/api/expenses/**", "/api/events/**", "/api/items/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/events").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/donors/**", "/api/expenses/**", "/api/events/**", "/api/items/**", "/api/user").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.PUT, "/api/events/**").hasAnyRole("ADMIN","USER")
                 .requestMatchers("/api/items/**", "/api/donors/**", "/api/expenses/**", "/api/events/close/**", "/api/user/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

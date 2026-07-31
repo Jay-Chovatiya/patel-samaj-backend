@@ -7,6 +7,8 @@ import lombok.Data;
 
 @Data
 public class UserProfileDTO {
+    private Integer userId;
+
     @NotBlank(message = "Full name cannot be empty")
     private String fullName;
 
@@ -16,5 +18,9 @@ public class UserProfileDTO {
 
     @Email(message = "Please provide a valid email address")
     private String email;
+
+    private Boolean isActive;
+
+    private String roleName;
 }
 

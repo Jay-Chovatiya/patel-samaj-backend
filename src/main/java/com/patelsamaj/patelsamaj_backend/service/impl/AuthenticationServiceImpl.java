@@ -25,7 +25,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         );
 
-        var user = repository.findByMobileNumber(request.getMobileNumber())
+        var user = repository.findByMobileNumberAndIsActiveTrue(request.getMobileNumber())
                 .orElseThrow();
 
         String jwtToken = jwtService.generateToken(user);
