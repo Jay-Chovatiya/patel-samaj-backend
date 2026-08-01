@@ -2,11 +2,9 @@ package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.ChangePasswordDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ForgotPasswordDTO;
-import com.patelsamaj.patelsamaj_backend.dto.UserDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserProfileDTO;
 import com.patelsamaj.patelsamaj_backend.exception.DuplicateResourceFoundException;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
-import com.patelsamaj.patelsamaj_backend.mapper.UserMapper;
 import com.patelsamaj.patelsamaj_backend.mapper.UserProfileMapper;
 import com.patelsamaj.patelsamaj_backend.model.Role;
 import com.patelsamaj.patelsamaj_backend.model.User;
@@ -30,7 +28,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final UserProfileMapper userProfileMapper;
-    private final UserMapper userMapper;
 
     @Override
     public UserProfileDTO getUserProfile(int userId){
@@ -72,8 +69,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDTO> getAllUsers(){
-        return userMapper.toDtoList(userRepository.findAll());
+    public List<UserProfileDTO> getAllUsers(){
+        return userProfileMapper.toDtoList(userRepository.findByRoleId(1));
     }
 
     @Override

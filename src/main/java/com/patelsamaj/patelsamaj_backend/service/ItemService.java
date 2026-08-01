@@ -1,7 +1,6 @@
 package com.patelsamaj.patelsamaj_backend.service;
 
 import com.patelsamaj.patelsamaj_backend.dto.ItemDTO;
-import com.patelsamaj.patelsamaj_backend.model.Item;
 
 import java.util.List;
 

@@ -1,7 +1,6 @@
 package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.ItemDTO;
-import com.patelsamaj.patelsamaj_backend.dto.ItemSelectionDTO;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
 import com.patelsamaj.patelsamaj_backend.mapper.ItemMapper;
 import com.patelsamaj.patelsamaj_backend.model.Item;
