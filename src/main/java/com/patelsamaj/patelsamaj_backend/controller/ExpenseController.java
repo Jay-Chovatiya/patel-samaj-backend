@@ -1,15 +1,15 @@
 package com.patelsamaj.patelsamaj_backend.controller;
 
-import com.patelsamaj.patelsamaj_backend.dto.DailyExpenseSummaryDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ExpenseDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
 import com.patelsamaj.patelsamaj_backend.service.impl.ExpenseServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -19,9 +19,10 @@ public class ExpenseController {
 
     private final ExpenseServiceImpl expenseService;
 
-    @GetMapping
-    public ResponseEntity<List<ExpenseDTO>> getAllExpense() {
-        return ResponseEntity.ok(expenseService.getAllExpense());
+    @PostMapping("/list")
+    public ResponseEntity<Page<ExpenseDTO>> getAllExpense(@RequestBody PaginationDTO request) {
+        request.setSortBy("expenseDate");
+        return ResponseEntity.ok(expenseService.getAllExpense(request));
     }
 
     @GetMapping("/{expenseId}")
@@ -33,10 +34,5 @@ public class ExpenseController {
     public ResponseEntity<ExpenseDTO> upsertExpense(@Valid @RequestBody ExpenseDTO dto) {
         int adminId = SecurityUtils.getAuthenticatedUserId();
         return ResponseEntity.ok(expenseService.upsertExpense(dto, adminId));
-    }
-
-    @GetMapping("/daily-summary")
-    public ResponseEntity<List<DailyExpenseSummaryDTO>> getDailySummary() {
-        return ResponseEntity.ok(expenseService.getDailyUsage());
     }
 }

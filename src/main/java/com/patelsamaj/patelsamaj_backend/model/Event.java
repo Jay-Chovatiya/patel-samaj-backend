@@ -27,8 +27,11 @@ public class Event {
     @Column(name = "event_type")
     private String eventType;
 
-    @Column(name = "event_date")
-    private LocalDateTime eventDate;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 
     @Column(name = "status_id")
     private Integer statusId;

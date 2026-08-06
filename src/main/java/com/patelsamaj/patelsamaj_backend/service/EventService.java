@@ -1,16 +1,14 @@
 package com.patelsamaj.patelsamaj_backend.service;
 
 import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
-
-import java.util.List;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
+import org.springframework.data.domain.Page;
 
 public interface EventService {
 
     EventDTO getEventById(int eventId);
 
-    List<EventDTO> getAllEvent();
-
-    List<EventDTO> getEventsByStatusId(int statusId);
+    Page<EventDTO> getEventsByStatusId(int statusId, PaginationDTO request);
 
     EventDTO upsertEvent(EventDTO eventDTO, int userId);
 

@@ -1,15 +1,16 @@
 package com.patelsamaj.patelsamaj_backend.controller;
 
 import com.patelsamaj.patelsamaj_backend.dto.ChangePasswordDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserProfileDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
 import com.patelsamaj.patelsamaj_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -31,9 +32,10 @@ public class UserController {
         return ResponseEntity.ok("Profile updated successfully.");
     }
 
-    @GetMapping("all")
-    public ResponseEntity<List<UserProfileDTO>> getAllAdminUser(){
-        return ResponseEntity.ok(userService.getAllUsers());
+    @PostMapping("/list")
+    public ResponseEntity<Page<UserProfileDTO>> getAllAdminUser(@RequestBody PaginationDTO request){
+        request.setSortBy("createdAt");
+        return ResponseEntity.ok(userService.getAllUsers(request));
     }
 
     @PutMapping("/toggle/{userId}")
