@@ -1,5 +1,6 @@
 package com.patelsamaj.patelsamaj_backend.service.impl;
 
+import com.patelsamaj.patelsamaj_backend.dto.DailyExpenseSummaryDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ExpenseDTO;
 import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,5 +59,10 @@ public class ExpenseServiceImpl implements ExpenseService {
         expenseMapper.updateEntityFromDto(dto, expense);
         expenseRepository.save(expense);
         return expenseMapper.toDto(expense);
+    }
+
+    @Override
+    public List<DailyExpenseSummaryDTO> getDailyUsage() {
+        return expenseRepository.getDailyUsageSummary();
     }
 }
