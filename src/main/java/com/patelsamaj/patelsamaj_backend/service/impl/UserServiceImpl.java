@@ -2,6 +2,7 @@ package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.ChangePasswordDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ForgotPasswordDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.dto.UserProfileDTO;
 import com.patelsamaj.patelsamaj_backend.exception.DuplicateResourceFoundException;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
@@ -14,10 +15,13 @@ import com.patelsamaj.patelsamaj_backend.service.EmailService;
 import com.patelsamaj.patelsamaj_backend.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -62,6 +66,7 @@ public class UserServiceImpl implements UserService {
         Role adminRole = roleRepository.findById(1)
                         .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
         user.setRole(adminRole);
+        user.setIsActive(true);
         user.setCreatedBy(userId);
         String randomPlainPassword = saveUserPassword(user);
         emailService.sendWelcomeEmail(user.getEmail(), user.getFullName(), dto.getMobileNumber() , randomPlainPassword);
@@ -69,8 +74,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserProfileDTO> getAllUsers(){
-        return userProfileMapper.toDtoList(userRepository.findByRoleId(1));
+    public Page<UserProfileDTO> getAllUsers(PaginationDTO request){
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize(),
+                Sort.by(request.getDirection(), request.getSortBy())
+        );
+        Page<User> userPage = userRepository.findByRoleId(1, pageable);
+        return userPage.map(userProfileMapper::toDto);
     }
 
     @Override

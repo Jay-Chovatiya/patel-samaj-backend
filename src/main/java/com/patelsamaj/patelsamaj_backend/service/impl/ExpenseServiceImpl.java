@@ -2,12 +2,17 @@ package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.DailyExpenseSummaryDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ExpenseDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
 import com.patelsamaj.patelsamaj_backend.mapper.ExpenseMapper;
 import com.patelsamaj.patelsamaj_backend.model.Expense;
 import com.patelsamaj.patelsamaj_backend.repository.ExpenseRepository;
 import com.patelsamaj.patelsamaj_backend.service.ExpenseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +34,14 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public List<ExpenseDTO> getAllExpense(){
-        return expenseMapper.toDtoList(expenseRepository.findAll());
+    public Page<ExpenseDTO> getAllExpense(PaginationDTO request){
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize(),
+                Sort.by(request.getDirection(), request.getSortBy())
+        );
+        Page<Expense> expensePage = expenseRepository.searchExpenses(request.getSearch(), pageable);
+        return expensePage.map(expenseMapper::toDto);
     }
 
     @Override

@@ -1,12 +1,11 @@
 package com.patelsamaj.patelsamaj_backend.service;
 
 import com.patelsamaj.patelsamaj_backend.dto.DonorDTO;
-
-import java.util.List;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
+import org.springframework.data.domain.Page;
 
 public interface DonorService {
     DonorDTO upsertDonor(DonorDTO dto, int userId);
-    List<DonorDTO> getDonorList();
+    Page<DonorDTO> getDonorList(PaginationDTO dto);
     DonorDTO getDonorById(int donorId);
-
 }

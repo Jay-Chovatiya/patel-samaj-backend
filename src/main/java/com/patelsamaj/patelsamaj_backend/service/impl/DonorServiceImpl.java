@@ -1,6 +1,7 @@
 package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.DonorDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
 import com.patelsamaj.patelsamaj_backend.mapper.DonorMapper;
 import com.patelsamaj.patelsamaj_backend.model.Donor;
@@ -8,11 +9,13 @@ import com.patelsamaj.patelsamaj_backend.repository.DonorRepository;
 import com.patelsamaj.patelsamaj_backend.service.DonorService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +42,20 @@ public class DonorServiceImpl implements DonorService  {
     }
 
     @Override
-    public List<DonorDTO> getDonorList() {
-        return donorMapper.toDtoList(donorRepository.findAll(Sort.by(Sort.Direction.DESC, "amount")));
+    public Page<DonorDTO> getDonorList(PaginationDTO request) {
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize(),
+                Sort.by(request.getDirection(), request.getSortBy())
+        );
+        Page<Donor> donorPage;
+
+        if (request.getSearch() == null || request.getSearch().isEmpty()) {
+            donorPage = donorRepository.findAll(pageable);
+        } else {
+            donorPage = donorRepository.findByFullNameContainingIgnoreCase(request.getSearch(), pageable);
+        }
+        return donorPage.map(donorMapper::toDto);
     }
 
     @Override

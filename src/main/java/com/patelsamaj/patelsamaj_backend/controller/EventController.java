@@ -1,14 +1,14 @@
 package com.patelsamaj.patelsamaj_backend.controller;
 
 import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
 import com.patelsamaj.patelsamaj_backend.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
@@ -16,27 +16,19 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
-    @GetMapping
-    public ResponseEntity<List<EventDTO>> getAllEvents(){
-        return ResponseEntity.ok(eventService.getAllEvent());
+    @PostMapping("/list")
+    public ResponseEntity<Page<EventDTO>> getEvents(
+            @RequestParam Integer statusId,
+            @RequestBody PaginationDTO request) {
+
+        request.setSortBy("createdAt");
+
+        return ResponseEntity.ok(
+                eventService.getEventsByStatusId(statusId, request)
+        );
     }
 
-    @GetMapping("/pending")
-    public ResponseEntity<List<EventDTO>> getPendingEvent(){
-        return ResponseEntity.ok(eventService.getEventsByStatusId(1));
-    }
-
-    @GetMapping("/approved")
-    public ResponseEntity<List<EventDTO>> getApprovedEvent(){
-        return ResponseEntity.ok(eventService.getEventsByStatusId(2));
-    }
-
-    @GetMapping("/in-progress")
-    public ResponseEntity<List<EventDTO>> getInProgressEvent(){
-        return ResponseEntity.ok(eventService.getEventsByStatusId(3));
-    }
-
-    @GetMapping("{eventId}")
+    @GetMapping("/{eventId}")
     public ResponseEntity<EventDTO> getEventById(@PathVariable int eventId){
         return ResponseEntity.ok(eventService.getEventById(eventId));
     }

@@ -24,8 +24,10 @@ public class EventDTO {
     @NotBlank(message = "Event type is required (e.g., Wedding, Meeting)")
     private String eventType;
 
-    @NotNull(message = "Event date cannot be null")
-    private LocalDateTime eventDate;
+    @NotNull(message = "Start date cannot be null")
+    private LocalDateTime startDate;
+
+    private LocalDateTime endDate;
 
     @PositiveOrZero(message = "Total amount cannot be negative")
     private Long totalAmount;

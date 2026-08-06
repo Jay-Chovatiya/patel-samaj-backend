@@ -35,16 +35,14 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/donors/**", "/api/expenses/**", "/api/events/**", "/api/items/**", "/api/user").hasAnyRole("ADMIN","USER")
-                .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN","USER")
-                .requestMatchers(HttpMethod.PUT, "/api/events/**").hasAnyRole("ADMIN","USER")
-                .requestMatchers("/api/items/**", "/api/donors/**", "/api/expenses/**", "/api/events/close/**", "/api/user/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/donors", "/api/expenses", "/api/items/**", "/api/events/close/**", "/api/user/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/user/**", "/api/events/close/{eventId}").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/items/{itemId}").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 

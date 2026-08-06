@@ -2,6 +2,7 @@ package com.patelsamaj.patelsamaj_backend.service.impl;
 
 import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ItemSelectionDTO;
+import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.exception.ResourceNotFoundException;
 import com.patelsamaj.patelsamaj_backend.mapper.EventMapper;
 import com.patelsamaj.patelsamaj_backend.model.*;
@@ -9,12 +10,14 @@ import com.patelsamaj.patelsamaj_backend.repository.*;
 import com.patelsamaj.patelsamaj_backend.service.EmailService;
 import com.patelsamaj.patelsamaj_backend.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +36,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getAllEvent(){
-        return eventMapper.toDtoList(eventRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")));
-    }
+    public Page<EventDTO> getEventsByStatusId(int statusId, PaginationDTO request){
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize(),
+                Sort.by(request.getDirection(), request.getSortBy())
+        );
 
-    public List<EventDTO> getEventsByStatusId(int statusId){
-        return eventMapper.toDtoList(eventRepository.findByStatusId(statusId));
+        Page<Event> eventPage = eventRepository.findByStatusId(statusId, pageable);
+
+        return eventPage.map(eventMapper::toDto);
     }
 
     @Override
