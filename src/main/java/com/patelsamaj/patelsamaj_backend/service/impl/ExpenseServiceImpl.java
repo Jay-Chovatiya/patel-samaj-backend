@@ -65,4 +65,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     public List<DailyExpenseSummaryDTO> getDailyUsage() {
         return expenseRepository.getDailyUsageSummary();
     }
+
+    @Override
+    @Transactional
+    public void deleteExpenseById(int expenseId) {
+        if (!expenseRepository.existsById(expenseId)) {
+            throw new ResourceNotFoundException("Expense not found");
+        }
+        expenseRepository.deleteById(expenseId);
+    }
 }

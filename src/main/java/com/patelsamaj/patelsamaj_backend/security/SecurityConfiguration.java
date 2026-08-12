@@ -37,7 +37,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/donors", "/api/expenses", "/api/items/**", "/api/events/close/**", "/api/user/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/user/**", "/api/events/close/{eventId}").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.DELETE, "/api/items/{itemId}").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/items/{itemId}", "/api/expenses/{expenseId}", "/api/donors/{donorId}").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

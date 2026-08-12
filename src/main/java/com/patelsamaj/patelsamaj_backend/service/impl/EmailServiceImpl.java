@@ -1,13 +1,19 @@
 package com.patelsamaj.patelsamaj_backend.service.impl;
 
-import com.patelsamaj.patelsamaj_backend.model.Event;
+import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
 import com.patelsamaj.patelsamaj_backend.service.EmailService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -19,21 +25,23 @@ public class EmailServiceImpl implements EmailService {
     private String fromEmail;
 
     @Async
-    public void sendBillReceipt(Event event) {
+    public void sendBillReceipt(EventDTO event, byte[] pdfBytes) {
         if (event.getEmail() == null || event.getEmail().isBlank()) {
             return;
         }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         String body = "જય શ્રી કૃષ્ણ, " + event.getFamilyHeadName() + ",\n\n"
                 + "પટેલ સમાજ સાથે બુકિંગ કરવા બદલ આપનો ખૂબ ખૂબ આભાર. આપની ઇવેન્ટ (" + event.getEventType() + ") નું બિલ સફળતાપૂર્વક ક્લોઝ કરી દેવામાં આવ્યું છે.\n\n"
-                + "ઇવેન્ટ શરૂઆતની તારીખ: " + event.getStartDate() + "\n"
-                + "ઇવેન્ટ સમાપ્તિ તારીખ: " + event.getEndDate() + "\n"
+                + "ઇવેન્ટ શરૂઆતની તારીખ: " + (event.getEndDate() != null ? event.getStartDate().format(formatter) : "" ) + "\n"
+                + "ઇવેન્ટ સમાપ્તિ તારીખ: " + (event.getEndDate() != null ? event.getEndDate().format(formatter) : "" ) + "\n"
                 + "કુલ ચૂકવવાપાત્ર રકમ: ₹" + event.getTotalAmount() + "\n\n"
                 + "આ બિલ હવે ડિજિટલ સિસ્ટમમાં ફાઇનલ કરીને લોક કરી દેવામાં આવ્યું છે, તેથી હવે આમાં કોઈ ફેરફાર થઈ શકશે નહીં. જો કોઈ પ્રશ્ન હોય તો સમાજના કાર્યાલયનો સંપર્ક કરવા વિનંતી.\n\n"
                 + "શુભેચ્છા સહ,\n"
                 + "પટેલ સમાજ મેનેજમેન્ટ";
 
-        sendMail(event.getEmail(), "પટેલ સમાજ - ફાઇનલ બિલ રસીદ", body);
+        String fileName = event.getFamilyHeadName() + "_" + event.getEventType() + ".pdf";
+        sendMailWithAttachment(event.getEmail(), "પટેલ સમાજ - ફાઇનલ બિલ રસીદ", body, pdfBytes, fileName);
     }
 
 
@@ -63,12 +71,58 @@ public class EmailServiceImpl implements EmailService {
         sendMail(toEmail, "પટેલ સમાજ પોર્ટલ પર આપનું સ્વાગત છે", body);
     }
 
-    private void sendMail(String toEmail, String subject, String body){
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject(subject);
-        message.setText(body);
-        mailSender.send(message);
+    private void sendMail(String toEmail, String subject, String body) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    false,
+                    "UTF-8"
+            );
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(body, false);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
+
+    private void sendMailWithAttachment(
+            String to,
+            String subject,
+            String body,
+            byte[] attachment,
+            String fileName
+    ) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    true,
+                    StandardCharsets.UTF_8.name()
+            );
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, false);
+
+            helper.addAttachment(
+                    fileName,
+                    new ByteArrayResource(attachment),
+                    "application/pdf"
+            );
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send bill receipt email", e);
+        }
     }
 }

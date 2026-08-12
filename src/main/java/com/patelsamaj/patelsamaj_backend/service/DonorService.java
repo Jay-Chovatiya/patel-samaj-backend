@@ -8,4 +8,5 @@ public interface DonorService {
     DonorDTO upsertDonor(DonorDTO dto, int userId);
     Page<DonorDTO> getDonorList(PaginationDTO dto);
     DonorDTO getDonorById(int donorId);
+    void deleteDonorById(int donorId);
 }

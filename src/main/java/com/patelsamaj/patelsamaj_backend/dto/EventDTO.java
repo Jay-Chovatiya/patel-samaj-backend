@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class EventDTO {
     private LocalDateTime endDate;
 
     @PositiveOrZero(message = "Total amount cannot be negative")
-    private Long totalAmount;
+    private BigDecimal totalAmount;
 
     private Boolean isClosed;
     private Integer statusId;

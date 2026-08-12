@@ -7,8 +7,13 @@ import com.patelsamaj.patelsamaj_backend.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/events")
@@ -24,7 +29,7 @@ public class EventController {
         request.setSortBy("createdAt");
 
         return ResponseEntity.ok(
-                eventService.getEventsByStatusId(statusId, request)
+            eventService.getEventsByStatusId(statusId, request)
         );
     }
 
@@ -45,8 +50,21 @@ public class EventController {
         return ResponseEntity.ok(eventService.upsertEvent(eventDTO, adminId));
     }
 
-    @PutMapping("/close/{eventId}")
-    public ResponseEntity<Integer> closeBill(@PathVariable Integer eventId) {
-        return ResponseEntity.ok(eventService.closeBill(eventId));
+    @PutMapping("/{eventId}/close")
+    public ResponseEntity<byte[]> closeBill(@PathVariable Integer eventId) {
+        EventDTO event = eventService.closeEvent(eventId);
+        byte[] pdfBytes = eventService.generateBillPdfForEvent(event);
+
+        String fileName = (event.getFamilyHeadName() != null ? event.getFamilyHeadName() : "bill")
+                + "_" + (event.getEventType() != null ? event.getEventType() : "event") + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString()
+                )
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdfBytes.length)
+                .body(pdfBytes);
     }
 }

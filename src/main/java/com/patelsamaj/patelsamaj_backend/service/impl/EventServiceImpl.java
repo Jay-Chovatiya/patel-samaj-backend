@@ -9,6 +9,7 @@ import com.patelsamaj.patelsamaj_backend.model.*;
 import com.patelsamaj.patelsamaj_backend.repository.*;
 import com.patelsamaj.patelsamaj_backend.service.EmailService;
 import com.patelsamaj.patelsamaj_backend.service.EventService;
+import com.patelsamaj.patelsamaj_backend.service.PdfGenerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ public class EventServiceImpl implements EventService {
     private final ItemRepository itemRepository;
     private final EventMapper eventMapper;
     private final EmailService emailService;
+    private final PdfGenerationService pdfGenerationService;
 
     @Override
     public EventDTO getEventById(int eventId) {
@@ -43,7 +49,7 @@ public class EventServiceImpl implements EventService {
                 Sort.by(request.getDirection(), request.getSortBy())
         );
 
-        Page<Event> eventPage = eventRepository.findByStatusId(statusId, pageable);
+        Page<Event> eventPage = eventRepository.findByStatusIdAndSearch(statusId, request.getSearch(), pageable);
 
         return eventPage.map(eventMapper::toDto);
     }
@@ -97,7 +103,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public int closeBill(int eventId) {
+    public EventDTO closeEvent(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
 
@@ -106,9 +112,44 @@ public class EventServiceImpl implements EventService {
         }
 
         event.setIsClosed(true);
-        event.setStatusId(3); // Set to 'Closed'
+        event.setStatusId(4); // Set to 'Closed'
         eventRepository.save(event);
-        emailService.sendBillReceipt(event);
-        return event.getEventId();
+
+        return eventMapper.toDto(event);
+    }
+
+    @Override
+    public byte[] generateBillPdfForEvent(EventDTO eventDTO) {
+        // Fetch all active catalog items sorted by itemId
+        List<Item> allMasterItems = itemRepository.findByIsDeletedFalse(Sort.by(Sort.Direction.ASC, "itemId"));
+
+        Map<Integer, ItemSelectionDTO> bookedMap = new HashMap<>();
+        if (eventDTO.getItems() != null) {
+            for (ItemSelectionDTO item : eventDTO.getItems()) {
+                if (item.getItemId() != null) {
+                    bookedMap.put(item.getItemId(), item);
+                }
+            }
+        }
+
+        List<ItemSelectionDTO> completeItemList = new ArrayList<>();
+        for (Item masterItem : allMasterItems) {
+            if (bookedMap.containsKey(masterItem.getItemId())) {
+                completeItemList.add(bookedMap.get(masterItem.getItemId()));
+            } else {
+                ItemSelectionDTO unbookedItem = new ItemSelectionDTO();
+                unbookedItem.setItemId(masterItem.getItemId());
+                unbookedItem.setItemName(masterItem.getItemName());
+                unbookedItem.setPriceAtBooking(masterItem.getCurrentPrice() != null ? masterItem.getCurrentPrice().floatValue() : 0.0f);
+                unbookedItem.setQuantity(0);
+                completeItemList.add(unbookedItem);
+            }
+        }
+        eventDTO.setItems(completeItemList);
+
+        byte[] pdfBytes = pdfGenerationService.generateBillPdf(eventDTO);
+
+        emailService.sendBillReceipt(eventDTO, pdfBytes);
+        return pdfBytes;
     }
 }

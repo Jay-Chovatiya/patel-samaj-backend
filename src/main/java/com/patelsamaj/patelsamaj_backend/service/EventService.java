@@ -12,6 +12,7 @@ public interface EventService {
 
     EventDTO upsertEvent(EventDTO eventDTO, int userId);
 
-    int closeBill(int eventId);
+    EventDTO closeEvent(int eventId);
 
+    byte[] generateBillPdfForEvent(EventDTO eventDTO);
 }

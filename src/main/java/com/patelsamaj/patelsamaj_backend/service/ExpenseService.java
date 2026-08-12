@@ -12,4 +12,5 @@ public interface ExpenseService {
     Page<ExpenseDTO> getAllExpense(PaginationDTO request);
     ExpenseDTO upsertExpense(ExpenseDTO dto, int userId);
     List<DailyExpenseSummaryDTO> getDailyUsage();
+    void deleteExpenseById(int expenseId);
 }
