@@ -1,6 +1,10 @@
 package com.patelsamaj.patelsamaj_backend.service.impl;
 
-import com.lowagie.text.pdf.BaseFont;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.WaitUntilState;
 import com.patelsamaj.patelsamaj_backend.dto.EventDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ItemSelectionDTO;
 import com.patelsamaj.patelsamaj_backend.service.PdfGenerationService;
@@ -10,19 +14,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,6 +33,30 @@ import java.util.Locale;
 public class PdfGenerationServiceImpl implements PdfGenerationService {
 
     private final TemplateEngine templateEngine;
+
+    private String notoSansRegularBase64;
+    private String notoSansBoldBase64;
+
+    private String getFontAsBase64(String resourcePath) {
+        try {
+            ClassPathResource resource = new ClassPathResource(resourcePath);
+            byte[] fontBytes = resource.getInputStream().readAllBytes();
+            return Base64.getEncoder().encodeToString(fontBytes);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load font: " + resourcePath, e);
+        }
+    }
+
+    private synchronized void initFonts() {
+        if (notoSansRegularBase64 == null) {
+            try {
+                notoSansRegularBase64 = getFontAsBase64("fonts/NotoSansGujarati-Regular.ttf");
+            } catch (Exception ignored) {}
+            try {
+                notoSansBoldBase64 = getFontAsBase64("fonts/NotoSansGujarati-Bold.ttf");
+            } catch (Exception ignored) {}
+        }
+    }
 
     private static final String[] WORDS = {
             "શૂન્ય",
@@ -79,6 +105,20 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         private String qtyRight;
         private String rupeesRight;
         private String paisaRight;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class BillPage {
+        private int pageNumber;
+        private int totalPages;
+        private boolean isFirstPage;
+        private boolean isLastPage;
+        private String pageNumberGujarati;
+        private String nextPageNumberGujarati;
+        private List<BillRow> rows;
     }
 
     private String toGujaratiDigits(Object input) {
@@ -144,86 +184,141 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         return "";
     }
 
+    private Browser launchBrowser(Playwright playwright) {
+        BrowserType.LaunchOptions options = new BrowserType.LaunchOptions()
+                .setHeadless(true)
+                .setArgs(List.of("--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"));
+
+        try {
+            options.setChannel("chrome");
+            return playwright.chromium().launch(options);
+        } catch (Exception e) {
+            try {
+                options.setChannel("msedge");
+                return playwright.chromium().launch(options);
+            } catch (Exception ex) {
+                options.setChannel((String) null);
+                return playwright.chromium().launch(options);
+            }
+        }
+    }
+
     @Override
     public byte[] generateBillPdf(EventDTO event) {
+        initFonts();
+
         // 1. Prepare Thymeleaf processing context variables
         Context context = new Context();
         context.setVariable("event", event);
+        context.setVariable("notoSansRegularBase64", notoSansRegularBase64);
+        context.setVariable("notoSansBoldBase64", notoSansBoldBase64);
 
-        // 2. Prepare dynamic symmetric rows (Left: 0..totalRows-1, Right: totalRows..2*totalRows-1)
         List<ItemSelectionDTO> items = event.getItems() != null ? event.getItems() : new ArrayList<>();
-        int totalRows = Math.max(32, (int) Math.ceil((double) items.size() / 2.0));
-        List<BillRow> rows = new ArrayList<>(totalRows);
+        final int ROWS_PER_PAGE = 33;
+        final int ITEMS_PER_PAGE = ROWS_PER_PAGE * 2;
 
-        for (int r = 0; r < totalRows; r++) {
-            BillRow.BillRowBuilder rowBuilder = BillRow.builder();
+        int totalPages = Math.max(1, (int) Math.ceil((double) items.size() / (double) ITEMS_PER_PAGE));
+        List<BillPage> pages = new ArrayList<>(totalPages);
 
-            // Left side
-            int leftIndex = r;
-            rowBuilder.srNoLeft(toGujaratiDigits(leftIndex + 1));
-            if (leftIndex < items.size()) {
-                ItemSelectionDTO leftItem = items.get(leftIndex);
-                rowBuilder.nameLeft(leftItem.getItemName() != null ? leftItem.getItemName() : "");
-                if (leftItem.getQuantity() != null && leftItem.getQuantity() > 0) {
-                    float price = leftItem.getPriceAtBooking();
-                    BigDecimal priceBd = BigDecimal.valueOf(price);
-                    BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(leftItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                    long rupees = lineTotal.longValue();
-                    int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
+        for (int p = 0; p < totalPages; p++) {
+            int itemOffset = p * ITEMS_PER_PAGE;
+            boolean isFirstPage = (p == 0);
+            boolean isLastPage = (p == totalPages - 1);
 
-                    rowBuilder.rateLeft(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
-                    rowBuilder.qtyLeft(toGujaratiDigits(leftItem.getQuantity()));
-                    rowBuilder.rupeesLeft(toGujaratiDigits(rupees));
-                    rowBuilder.paisaLeft(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
+            int itemsRemaining = Math.max(0, items.size() - itemOffset);
+            int rowsForThisPage;
+            if (totalPages == 1) {
+                rowsForThisPage = Math.max(28, (int) Math.ceil((double) items.size() / 2.0));
+                rowsForThisPage = Math.min(ROWS_PER_PAGE, rowsForThisPage);
+            } else if (!isLastPage) {
+                rowsForThisPage = ROWS_PER_PAGE;
+            } else {
+                rowsForThisPage = Math.max(15, (int) Math.ceil((double) itemsRemaining / 2.0));
+                rowsForThisPage = Math.min(ROWS_PER_PAGE, rowsForThisPage);
+            }
+
+            List<BillRow> pageRows = new ArrayList<>(rowsForThisPage);
+
+            for (int r = 0; r < rowsForThisPage; r++) {
+                BillRow.BillRowBuilder rowBuilder = BillRow.builder();
+
+                // Left side
+                int leftIndex = itemOffset + r;
+                rowBuilder.srNoLeft(toGujaratiDigits(leftIndex + 1));
+                if (leftIndex < items.size()) {
+                    ItemSelectionDTO leftItem = items.get(leftIndex);
+                    rowBuilder.nameLeft(leftItem.getItemName() != null ? leftItem.getItemName() : "");
+                    if (leftItem.getQuantity() != null && leftItem.getQuantity() > 0) {
+                        float price = leftItem.getPriceAtBooking();
+                        BigDecimal priceBd = BigDecimal.valueOf(price);
+                        BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(leftItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+                        long rupees = lineTotal.longValue();
+                        int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
+
+                        rowBuilder.rateLeft(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
+                        rowBuilder.qtyLeft(toGujaratiDigits(leftItem.getQuantity()));
+                        rowBuilder.rupeesLeft(toGujaratiDigits(rupees));
+                        rowBuilder.paisaLeft(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
+                    } else {
+                        rowBuilder.rateLeft("");
+                        rowBuilder.qtyLeft("");
+                        rowBuilder.rupeesLeft("");
+                        rowBuilder.paisaLeft("");
+                    }
                 } else {
+                    rowBuilder.nameLeft("");
                     rowBuilder.rateLeft("");
                     rowBuilder.qtyLeft("");
                     rowBuilder.rupeesLeft("");
                     rowBuilder.paisaLeft("");
                 }
-            } else {
-                rowBuilder.nameLeft("");
-                rowBuilder.rateLeft("");
-                rowBuilder.qtyLeft("");
-                rowBuilder.rupeesLeft("");
-                rowBuilder.paisaLeft("");
-            }
 
-            // Right side
-            int rightIndex = totalRows + r;
-            rowBuilder.srNoRight(toGujaratiDigits(rightIndex + 1));
-            if (rightIndex < items.size()) {
-                ItemSelectionDTO rightItem = items.get(rightIndex);
-                rowBuilder.nameRight(rightItem.getItemName() != null ? rightItem.getItemName() : "");
-                if (rightItem.getQuantity() != null && rightItem.getQuantity() > 0) {
-                    float price = rightItem.getPriceAtBooking();
-                    BigDecimal priceBd = BigDecimal.valueOf(price);
-                    BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(rightItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                    long rupees = lineTotal.longValue();
-                    int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
+                // Right side
+                int rightIndex = itemOffset + rowsForThisPage + r;
+                rowBuilder.srNoRight(toGujaratiDigits(rightIndex + 1));
+                if (rightIndex < items.size()) {
+                    ItemSelectionDTO rightItem = items.get(rightIndex);
+                    rowBuilder.nameRight(rightItem.getItemName() != null ? rightItem.getItemName() : "");
+                    if (rightItem.getQuantity() != null && rightItem.getQuantity() > 0) {
+                        float price = rightItem.getPriceAtBooking();
+                        BigDecimal priceBd = BigDecimal.valueOf(price);
+                        BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(rightItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+                        long rupees = lineTotal.longValue();
+                        int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
 
-                    rowBuilder.rateRight(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
-                    rowBuilder.qtyRight(toGujaratiDigits(rightItem.getQuantity()));
-                    rowBuilder.rupeesRight(toGujaratiDigits(rupees));
-                    rowBuilder.paisaRight(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
+                        rowBuilder.rateRight(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
+                        rowBuilder.qtyRight(toGujaratiDigits(rightItem.getQuantity()));
+                        rowBuilder.rupeesRight(toGujaratiDigits(rupees));
+                        rowBuilder.paisaRight(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
+                    } else {
+                        rowBuilder.rateRight("");
+                        rowBuilder.qtyRight("");
+                        rowBuilder.rupeesRight("");
+                        rowBuilder.paisaRight("");
+                    }
                 } else {
+                    rowBuilder.nameRight("");
                     rowBuilder.rateRight("");
                     rowBuilder.qtyRight("");
                     rowBuilder.rupeesRight("");
                     rowBuilder.paisaRight("");
                 }
-            } else {
-                rowBuilder.nameRight("");
-                rowBuilder.rateRight("");
-                rowBuilder.qtyRight("");
-                rowBuilder.rupeesRight("");
-                rowBuilder.paisaRight("");
+
+                pageRows.add(rowBuilder.build());
             }
 
-            rows.add(rowBuilder.build());
+            pages.add(BillPage.builder()
+                    .pageNumber(p + 1)
+                    .totalPages(totalPages)
+                    .isFirstPage(isFirstPage)
+                    .isLastPage(isLastPage)
+                    .pageNumberGujarati(toGujaratiDigits(p + 1))
+                    .nextPageNumberGujarati(toGujaratiDigits(p + 2))
+                    .rows(pageRows)
+                    .build());
         }
 
-        context.setVariable("rows", rows);
+        context.setVariable("pages", pages);
         context.setVariable("eventDateGujarati", formatDateToGujarati(event.getStartDate()));
         context.setVariable("contactNumberGujarati", toGujaratiDigits(event.getContactNumber()));
         context.setVariable("billNumberGujarati", toGujaratiDigits(event.getEventId()));
@@ -235,50 +330,29 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         // 3. Process data values through the Thymeleaf template file
         String processedHtml = templateEngine.process("bill-template", context);
 
-        // 4. Render processed XHTML string context into a raw PDF binary byte stream
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            ITextRenderer renderer = new ITextRenderer();
-            registerFonts(renderer);
-            renderer.setDocumentFromString(processedHtml);
-            renderer.layout();
-            renderer.createPDF(outputStream);
-            return outputStream.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate bill print document binary structure", e);
-        }
-    }
+        try (Playwright playwright = Playwright.create()) {
+            Browser browser = launchBrowser(playwright);
+            try {
+                Page page = browser.newPage();
+                page.setContent(
+                        processedHtml,
+                        new Page.SetContentOptions().setWaitUntil(WaitUntilState.LOAD)
+                );
 
-    private void registerFonts(ITextRenderer renderer) {
-        registerClasspathFont(renderer, "fonts/Nirmala.ttf");
-        registerClasspathFont(renderer, "fonts/NirmalaB.ttf");
-        registerClasspathFont(renderer, "fonts/MuktaVaani-Regular.ttf");
-        registerClasspathFont(renderer, "fonts/MuktaVaani-Bold.ttf");
-        registerClasspathFont(renderer, "fonts/NotoSansGujarati-Regular.ttf");
-        registerClasspathFont(renderer, "fonts/NotoSansGujarati-Bold.ttf");
-    }
+                // Wait until embedded fonts have finished loading
+                page.evaluate("() => document.fonts.ready");
 
-    private void registerClasspathFont(ITextRenderer renderer, String resourcePath) {
-        try {
-            Resource resource = new ClassPathResource(resourcePath);
-            if (resource.exists()) {
-                try {
-                    File file = resource.getFile();
-                    renderer.getFontResolver().addFont(file.getAbsolutePath(), BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                    return;
-                } catch (Exception ignored) {
-                    // When running from inside a packaged JAR file
-                }
+                Page.PdfOptions pdfOptions = new Page.PdfOptions()
+                        .setFormat("A4")
+                        .setPrintBackground(true)
+                        .setPreferCSSPageSize(true);
 
-                File tempFontFile = File.createTempFile("font-", ".ttf");
-                tempFontFile.deleteOnExit();
-                try (java.io.InputStream is = resource.getInputStream();
-                     java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFontFile)) {
-                    is.transferTo(fos);
-                }
-                renderer.getFontResolver().addFont(tempFontFile.getAbsolutePath(), BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                return page.pdf(pdfOptions);
+            } finally {
+                browser.close();
             }
         } catch (Exception e) {
-            throw new RuntimeException("Could not register font from " + resourcePath + ": " + e.getMessage(), e);
+            throw new RuntimeException("Failed to generate bill PDF using Playwright", e);
         }
     }
 }
