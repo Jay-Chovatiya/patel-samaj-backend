@@ -4,7 +4,7 @@ import com.patelsamaj.patelsamaj_backend.dto.DailyExpenseSummaryDTO;
 import com.patelsamaj.patelsamaj_backend.dto.ExpenseDTO;
 import com.patelsamaj.patelsamaj_backend.dto.PaginationDTO;
 import com.patelsamaj.patelsamaj_backend.helper.SecurityUtils;
-import com.patelsamaj.patelsamaj_backend.service.impl.ExpenseServiceImpl;
+import com.patelsamaj.patelsamaj_backend.service.ExpenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +20,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ExpenseController {
 
-    private final ExpenseServiceImpl expenseService;
+    private final ExpenseService expenseService;
 
     @PostMapping("/list")
     public ResponseEntity<Page<ExpenseDTO>> getAllExpense(@RequestBody PaginationDTO request) {
@@ -41,5 +41,11 @@ public class ExpenseController {
     @GetMapping("/daily-summary")
     public ResponseEntity<List<DailyExpenseSummaryDTO>> getDailySummary() {
         return ResponseEntity.ok(expenseService.getDailyUsage());
+    }
+
+    @DeleteMapping("/{expenseId}")
+    public ResponseEntity<String> deleteExpenseById(@PathVariable int expenseId) {
+        expenseService.deleteExpenseById(expenseId);
+        return ResponseEntity.ok("Expense deleted successfully.");
     }
 }

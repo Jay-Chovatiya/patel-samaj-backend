@@ -33,4 +33,10 @@ public class DonorController {
         request.setSortBy("amount");
         return ResponseEntity.ok(donorService.getDonorList(request));
     }
+
+    @DeleteMapping("/{donorId}")
+    public ResponseEntity<String> deleteDonorById(@PathVariable int donorId) {
+        donorService.deleteDonorById(donorId);
+        return ResponseEntity.ok("Donor deleted successfully.");
+    }
 }

@@ -64,4 +64,13 @@ public class DonorServiceImpl implements DonorService  {
                 .orElseThrow(() -> new ResourceNotFoundException("Donor not found"));
         return donorMapper.toDto(donor);
     }
+
+    @Override
+    @Transactional
+    public void deleteDonorById(int donorId) {
+        if (!donorRepository.existsById(donorId)) {
+            throw new ResourceNotFoundException("Donor not found");
+        }
+        donorRepository.deleteById(donorId);
+    }
 }

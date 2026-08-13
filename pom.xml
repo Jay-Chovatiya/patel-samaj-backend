@@ -108,9 +108,9 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.xhtmlrenderer</groupId>
-			<artifactId>flying-saucer-pdf-openpdf</artifactId>
-			<version>9.1.22</version>
+			<groupId>com.microsoft.playwright</groupId>
+			<artifactId>playwright</artifactId>
+			<version>1.61.0</version>
 		</dependency>
 
 		<!-- 7. Unified Testing (Fixed) -->

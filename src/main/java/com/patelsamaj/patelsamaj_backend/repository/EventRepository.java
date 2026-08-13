@@ -10,17 +10,19 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Integer> {
-    Page<Event> findByStatusId(Integer statusId, Pageable pageable);
 
     @Query("""
-        SELECT e 
+        SELECT e
         FROM Event e
         WHERE e.statusId = :statusId
+        AND(
+            :statusId = 4
+            OR e.startDate >= CURRENT_DATE
+        )
         AND (
-            :search IS NULL 
+            :search IS NULL
             OR :search = ''
             OR LOWER(e.familyHeadName) LIKE LOWER(CONCAT('%', :search, '%'))
-            OR LOWER(e.eventType) LIKE LOWER(CONCAT('%', :search, '%'))
         )
         """)
     Page<Event> findByStatusIdAndSearch(
