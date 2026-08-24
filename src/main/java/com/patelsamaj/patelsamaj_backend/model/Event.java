@@ -2,7 +2,6 @@ package com.patelsamaj.patelsamaj_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +35,8 @@ public class Event {
     @Column(name = "status_id")
     private Integer statusId;
 
-    @Column(name = "total_amount", precision = 9, scale = 2)
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Column(name = "total_amount")
+    private Integer totalAmount = 0;
 
     @Column(name = "is_closed")
     private Boolean isClosed = false;

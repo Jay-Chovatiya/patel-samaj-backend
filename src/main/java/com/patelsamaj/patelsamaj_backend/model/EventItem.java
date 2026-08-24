@@ -1,12 +1,12 @@
 package com.patelsamaj.patelsamaj_backend.model;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
+
 @Entity
 @Table(name = "event_items")
 @Data
-
 public class EventItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +24,6 @@ public class EventItem {
 
     private Integer quantity = 1;
 
-    @Column(name = "price_at_booking", nullable = false, precision = 7, scale = 2)
-    private BigDecimal priceAtBooking;
+    @Column(name = "price_at_booking", nullable = false)
+    private Integer priceAtBooking;
 }

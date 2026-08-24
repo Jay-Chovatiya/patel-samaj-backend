@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
                 request.getSize(),
                 Sort.by(request.getDirection(), request.getSortBy())
         );
-        Page<User> userPage = userRepository.findByRoleId(1, pageable);
+        Page<User> userPage = userRepository.findByRoleIdAndSearch(1, request.getSearch(), pageable);
         return userPage.map(userProfileMapper::toDto);
     }
 

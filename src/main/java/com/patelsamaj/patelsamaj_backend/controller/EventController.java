@@ -51,8 +51,13 @@ public class EventController {
     }
 
     @PutMapping("/{eventId}/close")
-    public ResponseEntity<byte[]> closeBill(@PathVariable Integer eventId) {
-        EventDTO event = eventService.closeEvent(eventId);
+    public ResponseEntity<EventDTO> closeBill(@PathVariable Integer eventId) {
+        return ResponseEntity.ok(eventService.closeEvent(eventId));
+    }
+
+    @GetMapping("/{eventId}/pdf")
+    public ResponseEntity<byte[]> generateBillPdf(@PathVariable Integer eventId) {
+        EventDTO event = eventService.getEventById(eventId);
         byte[] pdfBytes = eventService.generateBillPdfForEvent(event);
 
         String fileName = (event.getFamilyHeadName() != null ? event.getFamilyHeadName() : "bill")

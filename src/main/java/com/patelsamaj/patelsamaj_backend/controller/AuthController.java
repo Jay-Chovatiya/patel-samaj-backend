@@ -28,7 +28,7 @@ public class AuthController {
     public ResponseEntity<String> logout() {
         SecurityContextHolder.clearContext();
 
-        return ResponseEntity.ok("Logged out successfully. Token must be deleted on the frontend.");
+        return ResponseEntity.ok("Logged out successfully.");
     }
 
     @PostMapping("/forgot-password")

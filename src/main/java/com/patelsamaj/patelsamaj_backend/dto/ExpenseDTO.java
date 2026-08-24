@@ -2,7 +2,6 @@ package com.patelsamaj.patelsamaj_backend.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -14,7 +13,7 @@ public class ExpenseDTO {
 
     @NotNull(message = "Amount is required")
     @Positive(message = "Expense amount must be greater than zero")
-    private BigDecimal amount;
+    private Integer amount;
 
     @NotNull(message = "Expense date is required")
     private LocalDate expenseDate;

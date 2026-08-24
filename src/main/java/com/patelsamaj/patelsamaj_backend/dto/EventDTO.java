@@ -1,10 +1,10 @@
 package com.patelsamaj.patelsamaj_backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,16 +26,26 @@ public class EventDTO {
     private String eventType;
 
     @NotNull(message = "Start date cannot be null")
+    @Future(message = "Start date must be greater than today's date")
     private LocalDateTime startDate;
 
     private LocalDateTime endDate;
 
     @PositiveOrZero(message = "Total amount cannot be negative")
-    private BigDecimal totalAmount;
+    private Integer totalAmount;
 
     private Boolean isClosed;
     private Integer statusId;
 
     @Valid
     private List<ItemSelectionDTO> items;
+
+    @JsonIgnore
+    @AssertTrue(message = "End date must be greater than or equal to start date")
+    public boolean isEndDateValid() {
+        if (startDate == null || endDate == null) {
+            return true;
+        }
+        return !endDate.isBefore(startDate);
+    }
 }

@@ -19,14 +19,11 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -97,14 +94,12 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         private String rateLeft;
         private String qtyLeft;
         private String rupeesLeft;
-        private String paisaLeft;
 
         private String srNoRight;
         private String nameRight;
         private String rateRight;
         private String qtyRight;
         private String rupeesRight;
-        private String paisaRight;
     }
 
     @Data
@@ -145,8 +140,8 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         return toGujaratiDigits(date.format(formatter));
     }
 
-    private String toGujaratiWords(Long number) {
-        if (number == null || number == 0) {
+    private String toGujaratiWords(long number) {
+        if (number == 0) {
             return WORDS[0] + " પૂરા";
         }
         return convert(number).trim() + " પૂરા";
@@ -214,10 +209,10 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         context.setVariable("notoSansBoldBase64", notoSansBoldBase64);
 
         List<ItemSelectionDTO> items = event.getItems() != null ? event.getItems() : new ArrayList<>();
-        final int ROWS_PER_PAGE = 33;
+        final int ROWS_PER_PAGE = 35;
         final int ITEMS_PER_PAGE = ROWS_PER_PAGE * 2;
 
-        int totalPages = Math.max(1, (int) Math.ceil((double) items.size() / (double) ITEMS_PER_PAGE));
+        int totalPages = Math.max(1, (int) Math.ceil((double) items.size() / ITEMS_PER_PAGE));
         List<BillPage> pages = new ArrayList<>(totalPages);
 
         for (int p = 0; p < totalPages; p++) {
@@ -226,16 +221,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             boolean isLastPage = (p == totalPages - 1);
 
             int itemsRemaining = Math.max(0, items.size() - itemOffset);
-            int rowsForThisPage;
-            if (totalPages == 1) {
-                rowsForThisPage = Math.max(28, (int) Math.ceil((double) items.size() / 2.0));
-                rowsForThisPage = Math.min(ROWS_PER_PAGE, rowsForThisPage);
-            } else if (!isLastPage) {
-                rowsForThisPage = ROWS_PER_PAGE;
-            } else {
-                rowsForThisPage = Math.max(15, (int) Math.ceil((double) itemsRemaining / 2.0));
-                rowsForThisPage = Math.min(ROWS_PER_PAGE, rowsForThisPage);
-            }
+            int rowsForThisPage = Math.min(ROWS_PER_PAGE, (int) Math.ceil((double) itemsRemaining / 2.0));
 
             List<BillRow> pageRows = new ArrayList<>(rowsForThisPage);
 
@@ -244,64 +230,54 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
 
                 // Left side
                 int leftIndex = itemOffset + r;
-                rowBuilder.srNoLeft(toGujaratiDigits(leftIndex + 1));
                 if (leftIndex < items.size()) {
+                    rowBuilder.srNoLeft(toGujaratiDigits(leftIndex + 1));
                     ItemSelectionDTO leftItem = items.get(leftIndex);
                     rowBuilder.nameLeft(leftItem.getItemName() != null ? leftItem.getItemName() : "");
                     if (leftItem.getQuantity() != null && leftItem.getQuantity() > 0) {
-                        float price = leftItem.getPriceAtBooking();
-                        BigDecimal priceBd = BigDecimal.valueOf(price);
-                        BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(leftItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                        long rupees = lineTotal.longValue();
-                        int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
+                        int price = leftItem.getPriceAtBooking();
+                        int rupees = price * leftItem.getQuantity();
 
-                        rowBuilder.rateLeft(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
+                        rowBuilder.rateLeft(toGujaratiDigits(price));
                         rowBuilder.qtyLeft(toGujaratiDigits(leftItem.getQuantity()));
                         rowBuilder.rupeesLeft(toGujaratiDigits(rupees));
-                        rowBuilder.paisaLeft(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
                     } else {
                         rowBuilder.rateLeft("");
                         rowBuilder.qtyLeft("");
                         rowBuilder.rupeesLeft("");
-                        rowBuilder.paisaLeft("");
                     }
                 } else {
+                    rowBuilder.srNoLeft("");
                     rowBuilder.nameLeft("");
                     rowBuilder.rateLeft("");
                     rowBuilder.qtyLeft("");
                     rowBuilder.rupeesLeft("");
-                    rowBuilder.paisaLeft("");
                 }
 
                 // Right side
                 int rightIndex = itemOffset + rowsForThisPage + r;
-                rowBuilder.srNoRight(toGujaratiDigits(rightIndex + 1));
                 if (rightIndex < items.size()) {
+                    rowBuilder.srNoRight(toGujaratiDigits(rightIndex + 1));
                     ItemSelectionDTO rightItem = items.get(rightIndex);
                     rowBuilder.nameRight(rightItem.getItemName() != null ? rightItem.getItemName() : "");
                     if (rightItem.getQuantity() != null && rightItem.getQuantity() > 0) {
-                        float price = rightItem.getPriceAtBooking();
-                        BigDecimal priceBd = BigDecimal.valueOf(price);
-                        BigDecimal lineTotal = priceBd.multiply(BigDecimal.valueOf(rightItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                        long rupees = lineTotal.longValue();
-                        int paise = lineTotal.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).abs().intValue();
+                        int price = rightItem.getPriceAtBooking();
+                        int rupees = price * rightItem.getQuantity();
 
-                        rowBuilder.rateRight(toGujaratiDigits(String.format(Locale.US, "%.2f", price)));
+                        rowBuilder.rateRight(toGujaratiDigits(price));
                         rowBuilder.qtyRight(toGujaratiDigits(rightItem.getQuantity()));
                         rowBuilder.rupeesRight(toGujaratiDigits(rupees));
-                        rowBuilder.paisaRight(toGujaratiDigits(String.format(Locale.US, "%02d", paise)));
                     } else {
                         rowBuilder.rateRight("");
                         rowBuilder.qtyRight("");
                         rowBuilder.rupeesRight("");
-                        rowBuilder.paisaRight("");
                     }
                 } else {
+                    rowBuilder.srNoRight("");
                     rowBuilder.nameRight("");
                     rowBuilder.rateRight("");
                     rowBuilder.qtyRight("");
                     rowBuilder.rupeesRight("");
-                    rowBuilder.paisaRight("");
                 }
 
                 pageRows.add(rowBuilder.build());
@@ -323,9 +299,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         context.setVariable("contactNumberGujarati", toGujaratiDigits(event.getContactNumber()));
         context.setVariable("billNumberGujarati", toGujaratiDigits(event.getEventId()));
 
-        long roundedTotal = event.getTotalAmount() != null ? Math.round(event.getTotalAmount().doubleValue()) : 0L;
-        context.setVariable("totalAmountInWords", toGujaratiWords(roundedTotal));
-        context.setVariable("totalAmountGujaratiDigits", toGujaratiDigits(roundedTotal));
+        int totalAmount = event.getTotalAmount() != null ? event.getTotalAmount() : 0;
+        context.setVariable("totalAmountInWords", toGujaratiWords(totalAmount));
+        context.setVariable("totalAmountGujaratiDigits", toGujaratiDigits(totalAmount));
 
         // 3. Process data values through the Thymeleaf template file
         String processedHtml = templateEngine.process("bill-template", context);

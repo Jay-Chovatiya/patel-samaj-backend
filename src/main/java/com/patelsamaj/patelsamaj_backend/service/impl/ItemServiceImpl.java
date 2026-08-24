@@ -34,10 +34,6 @@ public class ItemServiceImpl implements ItemService {
             item.setCreatedBy(userId);
         }
 
-        if (item.getIsAvailable() == null) {
-            item.setIsAvailable(true);
-        }
-
         Item savedItem = itemRepository.save(item);
         return itemMapper.toDto(savedItem);
     }

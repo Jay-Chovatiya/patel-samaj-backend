@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,7 +16,7 @@ public class DonorDTO {
 
     @NotNull(message = "Donation amount is required")
     @Min(value = 1, message = "Amount must be greater than zero")
-    private BigDecimal amount;
+    private Integer amount;
 
     private LocalDateTime donationDate;
 

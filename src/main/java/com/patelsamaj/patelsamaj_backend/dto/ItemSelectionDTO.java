@@ -19,5 +19,5 @@ public class ItemSelectionDTO {
 
     private String itemName;
 
-    private float priceAtBooking;
+    private Integer priceAtBooking;
 }

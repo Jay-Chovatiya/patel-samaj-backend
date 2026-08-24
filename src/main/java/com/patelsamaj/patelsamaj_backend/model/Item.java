@@ -2,7 +2,6 @@ package com.patelsamaj.patelsamaj_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "items")
@@ -16,13 +15,10 @@ public class Item {
     @Column(name = "item_name", nullable = false, unique = true)
     private String itemName;
 
-    @Column(name = "current_price", nullable = false, precision = 7, scale = 2)
-    private BigDecimal currentPrice;
+    @Column(name = "current_price", nullable = false)
+    private Integer currentPrice;
 
     private String description;
-
-    @Column(name = "is_available")
-    private Boolean isAvailable = true;
 
     @Column(name = "created_by")
     private Integer createdBy;

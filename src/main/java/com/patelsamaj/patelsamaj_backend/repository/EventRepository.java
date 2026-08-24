@@ -15,8 +15,8 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
         SELECT e
         FROM Event e
         WHERE e.statusId = :statusId
-        AND(
-            :statusId = 4
+        AND (
+            :statusId IN (3, 4)
             OR e.startDate >= CURRENT_DATE
         )
         AND (

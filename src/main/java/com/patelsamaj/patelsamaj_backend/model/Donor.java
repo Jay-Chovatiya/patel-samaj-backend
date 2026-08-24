@@ -2,7 +2,6 @@ package com.patelsamaj.patelsamaj_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,8 +16,8 @@ public class Donor {
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    @Column(name = "amount", nullable = false, precision = 9, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = false)
+    private Integer amount;
 
     @Column(name = "donation_date", nullable = false)
     private LocalDateTime donationDate = LocalDateTime.now();

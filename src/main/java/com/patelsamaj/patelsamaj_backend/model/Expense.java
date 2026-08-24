@@ -3,7 +3,6 @@ package com.patelsamaj.patelsamaj_backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -18,8 +17,8 @@ public class Expense {
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false, precision = 9, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false)
+    private Integer amount;
 
     @Column(nullable = false)
     private LocalDate expenseDate;

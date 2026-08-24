@@ -197,8 +197,8 @@
         <!-- Customer Details Meta Row 2 -->
         <div class="info-section">
             <div class="info-row">
-                <div class="info-cell-label" style="width: 8%;">પ્રસંગ :</div>
-                <div class="info-cell-value" style="width: 32%;" th:text="${event.eventType}">દીકરાના લગ્ન પ્રસંગ</div>
+                <div class="info-cell-label" style="width: 6%;">પ્રસંગ :</div>
+                <div class="info-cell-value" style="width: 34%;" th:text="${event.eventType}">દીકરાના લગ્ન પ્રસંગ</div>
                 <div class="info-cell-label" style="width: 6%; text-align: center;">મોબાઈલ નંબર :</div>
                 <div class="info-cell-value" style="width: 34%;" th:text="${contactNumberGujarati}">૯૮૯૮૯૮૯૮૯૮</div>
                 <div class="info-cell-label" style="width: 8%; text-align: right;">નંબર :</div>
@@ -221,27 +221,21 @@
         </div>
     </div>
 
-    <!-- Symmetric 6-Column Left and 6-Column Right Matrix Sheet Layout -->
+    <!-- Symmetric 5-Column Left and 5-Column Right Matrix Sheet Layout -->
     <table class="items-table">
         <thead>
         <tr>
-            <th rowspan="2" style="width: 5%;">ક્રમ</th>
-            <th rowspan="2" style="width: 25%;">વસ્તુનું નામ</th>
-            <th rowspan="2" style="width: 7%;">૧ નંગનું<br/>ભાડું</th>
-            <th rowspan="2" style="width: 5.5%;">કુલ નંગ</th>
-            <th colspan="2" class="col-separator" style="width: 7.5%;">રકમ</th>
+            <th style="width: 5%;">ક્રમ</th>
+            <th style="width: 25%;">વસ્તુનું નામ</th>
+            <th style="width: 8%;">૧ નંગનું<br/>ભાડું</th>
+            <th style="width: 5.5%;">કુલ નંગ</th>
+            <th class="col-separator" style="width: 6.5%;">રકમ (રૂા.)</th>
 
-            <th rowspan="2" style="width: 5%;">ક્રમ</th>
-            <th rowspan="2" style="width: 25%;">વસ્તુનું નામ</th>
-            <th rowspan="2" style="width: 7%;">૧ નંગનું<br/>ભાડું</th>
-            <th rowspan="2" style="width: 5.5%;">કુલ નંગ</th>
-            <th colspan="2" style="width: 7.5%;">રકમ</th>
-        </tr>
-        <tr>
-            <th style="width: 5%;">રૂા.</th>
-            <th class="col-separator" style="width: 2.5%;">પૈ.</th>
-            <th style="width: 5%;">રૂા.</th>
-            <th style="width: 2.5%;">પૈ.</th>
+            <th style="width: 5%;">ક્રમ</th>
+            <th style="width: 25%;">વસ્તુનું નામ</th>
+            <th style="width: 8%;">૧ નંગનું<br/>ભાડું</th>
+            <th style="width: 5.5%;">કુલ નંગ</th>
+            <th style="width: 6.5%;">રકમ (રૂા.)</th>
         </tr>
         </thead>
         <tbody>
@@ -249,18 +243,16 @@
             <!-- Column Set 1: Left Side -->
             <td class="text-center" th:text="${row.srNoLeft}">૧</td>
             <td class="item-name" th:text="${row.nameLeft}">ડીશ સેટ</td>
-            <td class="amount-lock" th:text="${row.rateLeft}">૫.૦૦</td>
+            <td class="amount-lock" th:text="${row.rateLeft}">૫</td>
             <td class="amount-lock" th:text="${row.qtyLeft}">૫૦૦</td>
-            <td class="amount-lock" th:text="${row.rupeesLeft}">૨૫૦૦</td>
-            <td class="amount-lock col-separator" th:text="${row.paisaLeft}">૦૦</td>
+            <td class="amount-lock col-separator" th:text="${row.rupeesLeft}">૨૫૦૦</td>
 
             <!-- Column Set 2: Right Side -->
             <td class="text-center" th:text="${row.srNoRight}">૩૧</td>
             <td class="item-name" th:text="${row.nameRight}">તવો લોખંડનો</td>
-            <td class="amount-lock" th:text="${row.rateRight}">૫૦.૦૦</td>
+            <td class="amount-lock" th:text="${row.rateRight}">૫૦</td>
             <td class="amount-lock" th:text="${row.qtyRight}">૨</td>
             <td class="amount-lock" th:text="${row.rupeesRight}">૧૦૦</td>
-            <td class="amount-lock" th:text="${row.paisaRight}">૦૦</td>
         </tr>
         </tbody>
     </table>

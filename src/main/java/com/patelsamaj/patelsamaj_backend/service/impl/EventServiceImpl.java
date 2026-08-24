@@ -18,7 +18,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +76,7 @@ public class EventServiceImpl implements EventService {
 
         eventMapper.updateEntityFromDto(dto, event);
 
-        BigDecimal grandTotal = BigDecimal.ZERO;
+        int grandTotal = 0;
 
         for (ItemSelectionDTO selection : dto.getItems()) {
             Item masterItem = itemRepository.findById(selection.getItemId())
@@ -89,9 +88,8 @@ public class EventServiceImpl implements EventService {
             snapshotItem.setQuantity(selection.getQuantity());
             snapshotItem.setPriceAtBooking(masterItem.getCurrentPrice());
 
-            BigDecimal lineTotal = snapshotItem.getPriceAtBooking()
-                    .multiply(BigDecimal.valueOf(selection.getQuantity()));
-            grandTotal = grandTotal.add(lineTotal);
+            int lineTotal = snapshotItem.getPriceAtBooking() * selection.getQuantity();
+            grandTotal += lineTotal;
 
             event.getBookedItems().add(snapshotItem);
         }
@@ -140,7 +138,7 @@ public class EventServiceImpl implements EventService {
                 ItemSelectionDTO unbookedItem = new ItemSelectionDTO();
                 unbookedItem.setItemId(masterItem.getItemId());
                 unbookedItem.setItemName(masterItem.getItemName());
-                unbookedItem.setPriceAtBooking(masterItem.getCurrentPrice() != null ? masterItem.getCurrentPrice().floatValue() : 0.0f);
+                unbookedItem.setPriceAtBooking(masterItem.getCurrentPrice());
                 unbookedItem.setQuantity(0);
                 completeItemList.add(unbookedItem);
             }
