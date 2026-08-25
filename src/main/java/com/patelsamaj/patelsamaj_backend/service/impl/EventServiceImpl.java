@@ -18,10 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -149,5 +147,30 @@ public class EventServiceImpl implements EventService {
 
         emailService.sendBillReceipt(eventDTO, pdfBytes);
         return pdfBytes;
+    }
+
+    @Override
+    public Map<String, Integer> getCalendarEventCounts() {
+        LocalDate today = LocalDate.now();
+        List<Event> events = eventRepository.findFutureEventsByStatusIds();
+        Map<String, Integer> countsMap = new TreeMap<>();
+
+        for (Event event : events) {
+            LocalDate start = event.getStartDate().toLocalDate();
+            LocalDate end = event.getEndDate() != null ? event.getEndDate().toLocalDate() : start;
+
+            if (end.isBefore(start)) {
+                end = start;
+            }
+
+            LocalDate effectiveStart = start.isBefore(today) ? today : start;
+
+            for (LocalDate d = effectiveStart; !d.isAfter(end); d = d.plusDays(1)) {
+                String dateKey = d.toString();
+                countsMap.put(dateKey, countsMap.getOrDefault(dateKey, 0) + 1);
+            }
+        }
+
+        return countsMap;
     }
 }

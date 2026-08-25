@@ -72,4 +72,9 @@ public class EventController {
                 .contentLength(pdfBytes.length)
                 .body(pdfBytes);
     }
+
+    @GetMapping("/calendar-counts")
+    public ResponseEntity<java.util.Map<String, Integer>> getCalendarEventCounts() {
+        return ResponseEntity.ok(eventService.getCalendarEventCounts());
+    }
 }

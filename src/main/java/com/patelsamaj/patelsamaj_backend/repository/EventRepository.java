@@ -30,4 +30,15 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             @Param("search") String search,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT e
+        FROM Event e
+        WHERE e.statusId IN (2, 3)
+        AND (
+            e.startDate >= CURRENT_DATE
+            OR (e.endDate IS NOT NULL AND e.endDate >= CURRENT_DATE)
+        )
+        """)
+    java.util.List<Event> findFutureEventsByStatusIds();
 }
